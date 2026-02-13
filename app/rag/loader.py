@@ -1,5 +1,6 @@
 from pathlib import Path
 import yaml
+import re
 
 
 DATA_SOURCE_PATH = Path("data/source")
@@ -12,7 +13,7 @@ def load_documents():
         if file_path.suffix in [".yaml", ".yml"]:
             documents.extend(load_yaml(file_path))
         elif file_path.suffix == ".md":
-            documents.append(load_markdown(file_path))
+            documents.extend(load_markdown(file_path))
 
     return documents
 
@@ -21,25 +22,39 @@ def load_yaml(file_path: Path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = yaml.safe_load(f)
 
-    return [{
-        "content": str(content),
-        "metadata": {
-            "section": file_path.stem,
-            "filetype": "yaml",
-            "filename": file_path.name
-        }
-    }]
+    documents = []
+
+    for key, value in content.items():
+        documents.append({
+            "content": f"{key}:\n{value}",
+            "metadata": {
+                "section": file_path.stem,
+                "subsection": key,
+                "filetype": "yaml",
+                "filename": file_path.name
+            }
+        })
+
+    return documents
 
 
 def load_markdown(file_path: Path):
     with open(file_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    return {
-        "content": content,
-        "metadata": {
-            "section": file_path.stem,
-            "filetype": "markdown",
-            "filename": file_path.name
-        }
-    }
+    sections = re.split(r"(?=^#{1,3} )", content, flags=re.MULTILINE)
+
+    documents = []
+
+    for section in sections:
+        if section.strip():
+            documents.append({
+                "content": section.strip(),
+                "metadata": {
+                    "section": file_path.stem,
+                    "filetype": "markdown",
+                    "filename": file_path.name
+                }
+            })
+
+    return documents
