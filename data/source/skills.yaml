@@ -1,0 +1,29 @@
+programming_languages:
+  - Python
+  - C
+  - SQL
+
+data_libraries:
+  - NumPy
+  - Pandas
+  - Matplotlib
+
+ml_frameworks:
+  - TensorFlow
+  - Scikit-learn
+
+backend_frameworks:
+  - FastAPI
+
+ai_orchestration:
+  - LangChain
+
+databases:
+  - MySQL
+
+tools:
+  - Docker Compose
+  - Git
+  - GitHub
+  - VS Code
+  - Jupyter Notebook

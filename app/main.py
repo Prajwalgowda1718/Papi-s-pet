@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from app.config import settings
 from app.db.database import init_db
+from app.rag.loader import load_documents
+
 
 
 
@@ -23,3 +25,12 @@ def health_check():
 @app.on_event("startup")
 def startup_event():
     init_db()
+
+@app.get("/debug/documents")
+def debug_documents():
+    docs = load_documents()
+    return {
+        "count": len(docs),
+        "documents": docs
+    }
+
