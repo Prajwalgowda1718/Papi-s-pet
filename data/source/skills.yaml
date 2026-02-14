@@ -1,21 +1,21 @@
-programming_languages:
+programming languages:
   - Python
   - C
   - SQL
 
-data_libraries:
+data libraries:
   - NumPy
   - Pandas
   - Matplotlib
 
-ml_frameworks:
+Machine Learning Frameworks:
   - TensorFlow
   - Scikit-learn
 
-backend_frameworks:
+backend frameworks:
   - FastAPI
 
-ai_orchestration:
+ai orchestration:
   - LangChain
 
 databases:
