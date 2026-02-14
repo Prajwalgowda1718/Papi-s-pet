@@ -1,6 +1,7 @@
 from pathlib import Path
-from chromadb import PersistentClient
-from sentence_transformers import SentenceTransformer
+
+from langchain_community.vectorstores import Chroma
+from langchain_community.embeddings import SentenceTransformerEmbeddings
 
 from app.rag.loader import load_documents
 
@@ -8,53 +9,34 @@ from app.rag.loader import load_documents
 VECTOR_DB_PATH = Path("data/vectorstore/chromadb")
 COLLECTION_NAME = "papis_pet"
 
-# Initialize embedding model
-embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
+embedding_function = SentenceTransformerEmbeddings(
+    model_name="all-MiniLM-L6-v2"
+)
 
 
-def get_chroma_client():
-    VECTOR_DB_PATH.mkdir(parents=True, exist_ok=True)
-    return PersistentClient(path=str(VECTOR_DB_PATH))
-
-
-def get_or_create_collection():
-    client = get_chroma_client()
-    return client.get_or_create_collection(name=COLLECTION_NAME)
+def get_vectorstore():
+    return Chroma(
+        collection_name=COLLECTION_NAME,
+        embedding_function=embedding_function,
+        persist_directory=str(VECTOR_DB_PATH),
+    )
 
 
 def index_documents():
-    client = get_chroma_client()
-
-    # Delete existing collection if exists
-    try:
-        client.delete_collection(name=COLLECTION_NAME)
-    except Exception:
-        pass
-
-    collection = client.get_or_create_collection(name=COLLECTION_NAME)
-
     documents = load_documents()
 
-    for idx, doc in enumerate(documents):
-        embedding = embedding_model.encode(doc["content"]).tolist()
+    texts = [doc["content"] for doc in documents]
+    metadatas = [doc["metadata"] for doc in documents]
 
-        collection.upsert(
-            documents=[doc["content"]],
-            embeddings=[embedding],
-            metadatas=[doc["metadata"]],
-            ids=[f"doc_{idx}"]
-        )
+    vectorstore = get_vectorstore()
+
+    vectorstore.delete_collection()
+    vectorstore = get_vectorstore()
+
+    vectorstore.add_texts(texts=texts, metadatas=metadatas)
+    vectorstore.persist()
 
 
-
-def query_collection(query: str, n_results: int = 5):
-    collection = get_or_create_collection()
-
-    query_embedding = embedding_model.encode(query).tolist()
-
-    results = collection.query(
-        query_embeddings=[query_embedding],
-        n_results=n_results
-    )
-
-    return results
+def get_retriever():
+    vectorstore = get_vectorstore()
+    return vectorstore.as_retriever(search_kwargs={"k": 5})
