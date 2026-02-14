@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 
 from app.rag.loader import load_documents

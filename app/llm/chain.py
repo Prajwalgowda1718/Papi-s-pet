@@ -5,9 +5,11 @@ from langchain_core.output_parsers import StrOutputParser
 
 from app.config import settings
 from app.rag.vectorstore import get_retriever
+from app.guardrails.retrieval_guard import filter_sensitive_docs
 
 
 def build_chain():
+
     llm = ChatGoogleGenerativeAI(
         model="gemini-2.5-flash",
         google_api_key=settings.GEMINI_API_KEY,
@@ -15,6 +17,19 @@ def build_chain():
     )
 
     retriever = get_retriever()
+
+    #  Retrieval Guard Wrapper
+    def safe_context(query):
+
+        docs = retriever.invoke(query)
+
+        texts = [doc.page_content for doc in docs]
+
+        safe_texts = filter_sensitive_docs(texts)
+
+        return "\n\n".join(safe_texts)
+
+
 
     prompt = ChatPromptTemplate.from_template(
     """
@@ -41,10 +56,9 @@ Answer:
 """
 )
 
-
     chain = (
         {
-            "context": retriever,
+            "context": safe_context,
             "question": RunnablePassthrough()
         }
         | prompt

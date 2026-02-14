@@ -4,6 +4,9 @@ from app.db.database import init_db
 from app.rag.loader import load_documents
 from app.rag.vectorstore import index_documents
 from app.llm.chain import build_chain
+from app.guardrails.input_guard import is_malicious
+from app.guardrails.output_guard import is_sensitive_output
+
 
 
 
@@ -43,6 +46,22 @@ def debug_index():
 
 @app.get("/ask")
 def ask(q: str):
+
+    if is_malicious(q):
+        return {
+            "answer": "He prefers not to share that information publicly."
+        }
+
     chain = build_chain()
+
     response = chain.invoke(q)
-    return {"answer": response}
+
+    if is_sensitive_output(response):
+        return {
+            "answer": "He prefers not to share that information publicly."
+        }
+
+    return {
+        "answer": response
+    }
+
