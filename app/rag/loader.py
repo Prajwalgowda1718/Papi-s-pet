@@ -3,6 +3,7 @@ import yaml
 import re
 
 
+
 DATA_SOURCE_PATH = Path("data/source")
 
 
@@ -25,15 +26,30 @@ def load_yaml(file_path: Path):
     documents = []
 
     for key, value in content.items():
+
+        # Convert list values into readable string
+        if isinstance(value, list):
+            formatted_value = ", ".join(value)
+        else:
+            formatted_value = str(value)
+
+        # Convert snake_case keys into readable form
+        readable_key = key.replace("_", " ").title()
+
         documents.append({
-            "content": f"{key}:\n{value}",
+            "content": f"{readable_key}: {formatted_value}",
             "metadata": {
                 "section": file_path.stem,
                 "subsection": key,
                 "filetype": "yaml",
-                "filename": file_path.name
+                "filename": file_path.name,
+                "access_level": "public"
             }
         })
+
+    return documents
+
+
 
     return documents
 
@@ -49,12 +65,15 @@ def load_markdown(file_path: Path):
     for section in sections:
         if section.strip():
             documents.append({
-                "content": section.strip(),
-                "metadata": {
+                 "content": section.strip(),
+                 "metadata": {
                     "section": file_path.stem,
                     "filetype": "markdown",
-                    "filename": file_path.name
-                }
-            })
+                    "filename": file_path.name,
+                    "access_level": "public"
+                    }
+})
+
+
 
     return documents
