@@ -6,8 +6,7 @@ from app.rag.vectorstore import index_documents
 from app.llm.chain import build_chain
 from app.guardrails.input_guard import is_malicious
 from app.guardrails.output_guard import is_sensitive_output
-
-
+from app.guardrails.output_guard import validate_output
 
 
 app=FastAPI(title="Papi's pet API")
@@ -46,22 +45,14 @@ def debug_index():
 
 @app.get("/ask")
 def ask(q: str):
-
     if is_malicious(q):
         return {
             "answer": "He prefers not to share that information publicly."
         }
 
     chain = build_chain()
-
     response = chain.invoke(q)
 
-    if is_sensitive_output(response):
-        return {
-            "answer": "He prefers not to share that information publicly."
-        }
+    safe_response = validate_output(response)
 
-    return {
-        "answer": response
-    }
-
+    return {"answer": safe_response}
