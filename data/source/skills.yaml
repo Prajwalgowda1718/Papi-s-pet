@@ -1,22 +1,24 @@
+Machine Learning Frameworks:
+  - TensorFlow
+  - Scikit-learn
+
 programming languages:
   - Python
   - C
   - SQL
+  - java (basic)
 
 data libraries:
   - NumPy
   - Pandas
   - Matplotlib
 
-Machine Learning Frameworks:
-  - TensorFlow
-  - Scikit-learn
-
 backend frameworks:
   - FastAPI
 
-ai orchestration:
+artificial intelligence orchestration:
   - LangChain
+  - RAG
 
 databases:
   - MySQL

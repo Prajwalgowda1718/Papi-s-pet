@@ -41,11 +41,24 @@ def index_documents():
     vectorstore.persist()
 
 
-def get_retriever():
+def get_retriever(section: str | None = None):
     vectorstore = get_vectorstore()
+
+    # Base filter
+    if section:
+        where_filter = {
+            "$and": [
+                {"access_level": "public"},
+                {"section": section}
+            ]
+        }
+    else:
+        where_filter = {"access_level": "public"}
+
     return vectorstore.as_retriever(
         search_kwargs={
-            "k": 5,
-            "filter": {"access_level": "public"}
+            "k": 8,
+            "filter": where_filter
         }
     )
+

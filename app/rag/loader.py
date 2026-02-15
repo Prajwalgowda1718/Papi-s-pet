@@ -51,7 +51,6 @@ def load_yaml(file_path: Path):
 
 
 
-    return documents
 
 
 def load_markdown(file_path: Path):

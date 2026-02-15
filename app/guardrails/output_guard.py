@@ -7,12 +7,13 @@ PII_PATTERNS = [
 ]
 
 
-FORBIDDEN_PHRASES = [
-    "i am",
-    "i think",
-    "as an ai",
-    "i cannot",
-    "my",
+FORBIDDEN_PATTERNS = [
+    r"\bi am\b",
+    r"\bi think\b",
+    r"\bas an ai\b",
+    r"\bi cannot\b",
+    r"\bmy\b",
+    
 ]
 
 
@@ -25,9 +26,11 @@ def contains_pii(text: str) -> bool:
 
 def violates_third_person(text: str) -> bool:
     lower_text = text.lower()
-    for phrase in FORBIDDEN_PHRASES:
-        if phrase in lower_text:
+
+    for pattern in FORBIDDEN_PATTERNS:
+        if re.search(pattern, lower_text):
             return True
+
     return False
 
 
