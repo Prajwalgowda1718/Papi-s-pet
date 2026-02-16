@@ -9,6 +9,10 @@ from app.db.session_manager import create_session, log_message
 from app.db.cost_logger import estimate_tokens, log_cost
 from app.monitoring.budget import is_budget_exceeded
 from app.llm.chain import generate_response
+from app.db.cache_manager import get_cached_response, store_response_in_cache
+from app.monitoring.rate_limiter import is_rate_limited, record_request
+
+
 
 
 app=FastAPI(title="Papi's pet API")
@@ -48,42 +52,74 @@ from app.db.session_manager import create_session, log_message
 
 
 @app.get("/ask")
-
 def ask(q: str, session_id: str | None = None):
 
+    # Budget check
     if is_budget_exceeded():
         return {
             "answer": "Service temporarily unavailable due to daily usage limits. Please try again tomorrow."
         }
 
-
-    # Create session if not provided
+    # Create session if needed
     if session_id is None:
         session_id = create_session()
+
+    # Rate limiting check
+    if is_rate_limited(session_id):
+        return {
+            "answer": "Too many requests. Please slow down.",
+            "session_id": session_id
+
+        }
+
+    # Record this request
+    record_request(session_id)
 
     # Log user message
     log_message(session_id, "user", q)
 
+    # Input guard
     if is_malicious(q):
         fallback = "He prefers not to share that information publicly."
         log_message(session_id, "assistant", fallback)
-        return {"answer": fallback, "session_id": session_id}
+        return {
+            "answer": fallback,
+            "session_id": session_id,
+            "cached": False
+        }
 
+    # Check cache
+    cached = get_cached_response(q)
+    if cached:
+        log_message(session_id, "assistant", cached)
+        return {
+            "answer": cached,
+            "session_id": session_id,
+            "cached": True
+        }
+
+    # Generate response
     response = generate_response(q)
 
-
+    # Output guard
     safe_response = validate_output(response)
 
+    # Log assistant response
     log_message(session_id, "assistant", safe_response)
 
-    # Estimate tokens
+    # Estimate tokens and cost
     input_tokens = estimate_tokens(q)
     output_tokens = estimate_tokens(safe_response)
     total_tokens = input_tokens + output_tokens
-
     cost = total_tokens * 0.00002
 
     log_cost(session_id, total_tokens, cost)
 
-    return {"answer": safe_response, "session_id": session_id}
+    # Store in cache
+    store_response_in_cache(q, safe_response)
 
+    return {
+        "answer": safe_response,
+        "session_id": session_id,
+        "cached": False
+    }

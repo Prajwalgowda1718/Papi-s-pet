@@ -5,7 +5,7 @@ SENSITIVE_PATTERNS = [
     r"\b\d{10}\b",                  # phone numbers
     r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b",  # emails
     r"address",
-    r"contact number",
+    r"number",
     r"personal email"
 ]
 
