@@ -1,6 +1,5 @@
 from app.db.database import get_connection
-
-MAX_REQUESTS_PER_MINUTE = 5
+from app.config import settings
 
 
 def is_rate_limited(session_id: str) -> bool:
@@ -16,7 +15,8 @@ def is_rate_limited(session_id: str) -> bool:
     count = cursor.fetchone()[0]
     conn.close()
 
-    return count >= MAX_REQUESTS_PER_MINUTE
+    return count >= settings.MAX_REQUESTS_PER_MINUTE
+
 
 
 def record_request(session_id: str):

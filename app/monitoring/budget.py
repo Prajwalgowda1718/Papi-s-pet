@@ -1,7 +1,7 @@
 from app.db.database import get_connection
+from app.config import settings
 
 
-DAILY_COST_LIMIT = 5
 
 
 def get_today_cost() -> float:
@@ -21,4 +21,6 @@ def get_today_cost() -> float:
 
 
 def is_budget_exceeded() -> bool:
-    return get_today_cost() >= DAILY_COST_LIMIT
+
+    return get_today_cost() >= settings.DAILY_COST_LIMIT
+

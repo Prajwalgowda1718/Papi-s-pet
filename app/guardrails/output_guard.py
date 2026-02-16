@@ -1,9 +1,10 @@
 import re
+from app.utils.fallbacks import sensitive_information
 
 
 PII_PATTERNS = [
-    r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",  # email
-    r"\+?\d{10,15}",  # phone number
+    r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
+    r"\+?\d{10,15}",
 ]
 
 
@@ -13,7 +14,6 @@ FORBIDDEN_PATTERNS = [
     r"\bas an ai\b",
     r"\bi cannot\b",
     r"\bmy\b",
-    
 ]
 
 
@@ -35,7 +35,10 @@ def violates_third_person(text: str) -> bool:
 
 
 def validate_output(text: str) -> str:
-    if contains_pii(text) or violates_third_person(text):
-        return "He prefers not to share that information publicly."
+    if contains_pii(text):
+        return sensitive_information()
+
+    if violates_third_person(text):
+        return sensitive_information()
 
     return text

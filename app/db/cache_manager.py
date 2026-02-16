@@ -1,4 +1,6 @@
 from app.db.database import get_connection
+from app.config import settings
+
 from app.utils.embedding_utils import (
     embed_text,
     serialize_embedding,
@@ -6,8 +8,6 @@ from app.utils.embedding_utils import (
     cosine_similarity,
 )
 
-
-SIMILARITY_THRESHOLD = 0.85
 
 
 def get_cached_response(query: str):
@@ -23,7 +23,8 @@ def get_cached_response(query: str):
         stored_vector = deserialize_embedding(row["embedding"])
         similarity = cosine_similarity(query_vector, stored_vector)
 
-        if similarity >= SIMILARITY_THRESHOLD:
+        if similarity >= settings.SIMILARITY_THRESHOLD:
+
             conn.close()
             return row["response"]
 

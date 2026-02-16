@@ -1,11 +1,19 @@
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
+from langchain_google_genai.chat_models import ChatGoogleGenerativeAIError
+from app.utils.fallbacks import out_of_scope, service_unavailable
 from app.config import settings
 from app.rag.vectorstore import get_retriever
 from app.rag.reranker import rerank_documents
 from app.rag.router import detect_target_section
+
+
+
+_llm = None
+_prompt = None
+_chain = None
 
 
 def build_llm():
@@ -39,6 +47,21 @@ Answer:
     )
 
 
+def get_chain():
+    global _llm, _prompt, _chain
+
+    if _chain is None:
+        _llm = build_llm()
+        _prompt = build_prompt()
+        _chain = _prompt | _llm | StrOutputParser()
+
+    return _chain
+
+
+
+
+
+
 def generate_response(query: str):
     section = detect_target_section(query)
     retriever = get_retriever(section)
@@ -46,18 +69,18 @@ def generate_response(query: str):
     docs = retriever.invoke(query)
 
     if not docs:
-        return {
-            "This assistant is designed to provide only non sensitive information "
-            "only about Prajwal K Madegowda."
-        }
+        return out_of_scope()
 
     ranked = rerank_documents(docs)
-
     context = "\n\n---\n\n".join(doc.page_content for doc in ranked)
 
-    llm = build_llm()
-    prompt = build_prompt()
+    chain = get_chain()
 
-    chain = prompt | llm | StrOutputParser()
+    try:
+        return chain.invoke({"context": context, "question": query})
 
-    return chain.invoke({"context": context, "question": query})
+    except ChatGoogleGenerativeAIError:
+        return service_unavailable()
+
+    except Exception:
+        return service_unavailable()

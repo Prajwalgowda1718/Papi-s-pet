@@ -1,4 +1,5 @@
 import re
+from app.utils.fallbacks import malicious_query
 
 
 SUSPICIOUS_PATTERNS = [
@@ -23,3 +24,7 @@ def is_malicious(query: str) -> bool:
             return True
 
     return False
+
+
+def handle_malicious():
+    return malicious_query()
