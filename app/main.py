@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.db.database import init_db
 from app.rag.loader import load_documents
@@ -12,19 +16,28 @@ from app.llm.chain import generate_response
 from app.db.cache_manager import get_cached_response, store_response_in_cache
 from app.monitoring.rate_limiter import is_rate_limited, record_request
 from app.utils.logger import logger
-from app.db.session_manager import create_session, log_message
 from app.guardrails.input_guard import handle_malicious
 
 
 app=FastAPI(title="Papi's pet API")
 
+BASE_DIR = Path(__file__).resolve().parent
+STATIC_DIR = BASE_DIR / "static"
+
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
+
 @app.get("/")
-def root():
+def frontend():
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api/info")
+def api_info():
     return {
         "message": "Papi's Pet is running",
         "environment": settings.APP_ENV,
         "debug": settings.DEBUG,
-        
     }
 
 

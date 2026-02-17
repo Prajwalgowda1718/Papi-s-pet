@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Papi's Pet</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="hero">
+        <p class="eyebrow">AI Assistant</p>
+        <h1>Papi's Pet</h1>
+        <p class="subtitle">Ask profile-related questions and get grounded answers.</p>
+      </header>
+
+      <section class="chat-card">
+        <form id="ask-form" class="input-row">
+          <input id="question" type="text" placeholder="Ask about skills, education, or projects..." required />
+          <button id="ask-btn" type="submit">Ask</button>
+        </form>
+
+        <div id="status" class="status" aria-live="polite"></div>
+
+        <article class="answer-block">
+          <h2>Answer</h2>
+          <p id="answer">Your response will appear here.</p>
+        </article>
+      </section>
+    </main>
+
+    <script>
+      const form = document.getElementById('ask-form');
+      const questionInput = document.getElementById('question');
+      const answer = document.getElementById('answer');
+      const status = document.getElementById('status');
+      const askBtn = document.getElementById('ask-btn');
+
+      let sessionId = null;
+
+      form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const question = questionInput.value.trim();
+        if (!question) return;
+
+        askBtn.disabled = true;
+        status.textContent = 'Thinking...';
+
+        try {
+          const params = new URLSearchParams({ q: question });
+          if (sessionId) params.append('session_id', sessionId);
+
+          const response = await fetch(`/ask?${params.toString()}`);
+          const data = await response.json();
+
+          answer.textContent = data.answer || 'No answer was returned.';
+          sessionId = data.session_id || sessionId;
+          status.textContent = data.cached ? 'Served from cache.' : 'Fresh response generated.';
+        } catch (_error) {
+          status.textContent = 'Unable to reach the API right now.';
+        } finally {
+          askBtn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
